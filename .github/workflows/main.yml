@@ -51,10 +51,10 @@ jobs:
       run: |
           docker login
           docker build -t rorImage . 
-          docker tag rorImage cesarinag/rorImage:8.4.22
+          docker tag rorImage cesarinag/ror-image:8.4.22
 
     - name: Snyk Container Scanning
-      run: snyk container test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-container.sarif cesarinag/rorImage:8.4.22
+      run: snyk container test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-container.sarif cesarinag/ror-image:8.4.22
       continue-on-error: true
     - name: Upload results to GitHub Container Scanning
       uses: github/codeql-action/upload-sarif@v1
