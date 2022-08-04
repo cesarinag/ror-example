@@ -30,22 +30,31 @@ jobs:
     #- run: snyk config set endpoint='https://app.eu.snyk.io/api'
       
     - run: snyk auth ${{ secrets.SNYK_TOKEN }}
+    - name: install snyk-to-html
+      run: |
+        npm install snyk-to-html -g
+        #snyk test --json | snyk-to-html -o result.html
+        mkdir downloads
+        cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
 
     - name: Snyk Open Source Scanning
-      run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --sarif-file-output=snyk-oss.sarif
+      run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --json | snyk-to-html -o result.html
       continue-on-error: true
-    - name: Upload results to GitHub Open Source Scanning
-      uses: github/codeql-action/upload-sarif@v1
+    - name: Use the Upload Artifact GitHub Action
+      uses: actions/upload-artifact@v3.1.0
       with:
-        sarif_file: snyk-oss.sarif
+        name: oss-results
+        path: downloads
 
     - name: Snyk Code Scanning
-      run: snyk code test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-code.sarif
+      run: snyk code test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
       continue-on-error: true
-    - name: Upload results to GitHub Code Scanning
-      uses: github/codeql-action/upload-sarif@v1
+    - name: Use the Upload Artifact GitHub Action
+      uses: actions/upload-artifact@v3.1.0
       with:
-        sarif_file: snyk-code.sarif
+        name: code-results
+        path: downloads
+
 
     - name: Build the Docker Image
       run: |
@@ -54,18 +63,20 @@ jobs:
           docker tag rorImage cesarinag/ror-image:8.4.22
 
     - name: Snyk Container Scanning
-      run: snyk container test --org=${{ secrets.SNYK_ORG }} --file=Dockerfile --sarif-file-output=snyk-container.sarif cesarinag/ror-image:8.4.22
+      run: snyk container test --org=${{ secrets.SNYK_ORG }} --file=Dockerfile --json | snyk-to-html -o result.html cesarinag/ror-image:8.4.22
       continue-on-error: true
-    - name: Upload results to GitHub Container Scanning
-      uses: github/codeql-action/upload-sarif@v1
+    - name: Use the Upload Artifact GitHub Action
+      uses: actions/upload-artifact@v3.1.0
       with:
-        sarif_file: snyk-container.sarif
+        name: container-results
+        path: downloads
 
     - name: Snyk Infrastructure-as-Code Scanning
-      run: snyk iac test --org=${{ secrets.SNYK_ORG }} --sarif-file-output=snyk-iac.sarif
+      run: snyk iac test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
       continue-on-error: true
-    - name: Upload results to GitHub IaC Scanning
-      uses: github/codeql-action/upload-sarif@v1
+    - name: Use the Upload Artifact GitHub Action
+      uses: actions/upload-artifact@v3.1.0
       with:
-        sarif_file: snyk-iac.sarif
+        name: iac-results
+        path: downloads
         
