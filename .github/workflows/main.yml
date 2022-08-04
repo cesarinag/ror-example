@@ -31,7 +31,10 @@ jobs:
       
     - run: snyk auth ${{ secrets.SNYK_TOKEN }}
     - name: install snyk-to-html
-      run: npm install snyk-to-html -g
+      run: |
+        npm install snyk-to-html -g
+        mkdir downloads
+        cp -v /home/runner/work/ror-example/ror-example/*.html /home/runner/work/ror-example/ror-example/downloads
 
     - name: Snyk Open Source Scanning
       run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --json | snyk-to-html -o result.html
