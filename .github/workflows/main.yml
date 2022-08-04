@@ -28,7 +28,10 @@ jobs:
          snyk-to-html -i results_code.sarif -o results_code.html || true
          snyk test --json | snyk-to-html -o results_sca.html || true
          snyk iac test . --json | snyk-to-html -o results_iac.html || true
-         snyk container test snykschmidtty/goof:latest --json | snyk-to-html -o results_container.html || true
+         docker login
+          docker build -t ror-image . 
+          docker tag ror-image cesarinag/ror-image:8.4.22
+         snyk container test cesarinag/ror-image:8.4.22 --json | snyk-to-html -o results_container.html || true
       continue-on-error: true
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v2
