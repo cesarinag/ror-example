@@ -43,7 +43,7 @@ jobs:
       uses: actions/upload-artifact@v3.1.0
       with:
         name: oss-results
-        path: downloads
+        path: /downloads
 
     - name: Snyk Code Scanning
       run: snyk code test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
@@ -52,7 +52,7 @@ jobs:
       uses: actions/upload-artifact@v3.1.0
       with:
         name: code-results
-        path: downloads
+        path: /downloads
 
 
     - name: Build the Docker Image
@@ -68,7 +68,7 @@ jobs:
       uses: actions/upload-artifact@v3.1.0
       with:
         name: container-results
-        path: downloads
+        path: /downloads
 
     - name: Snyk Infrastructure-as-Code Scanning
       run: snyk iac test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
@@ -77,5 +77,5 @@ jobs:
       uses: actions/upload-artifact@v3.1.0
       with:
         name: iac-results
-        path: downloads
+        path: /downloads
         
