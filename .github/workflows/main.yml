@@ -1,80 +1,53 @@
-name: Prebuilt repo + Snyk Security Scanning (OS, Code, Docker, IaC)
+name: "Snyk Platform Scan"
 
-# Runs 4 Snyk Products (Code, Open Source, Container, IaC)
-# Snyk installation via npm
-# Node.js version: 18.4
-
-# Prerequisites:
-# - Set a SNYK_TOKEN and a SNYK_ORG in the pipelines secrets
-
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - master
 
 jobs:
-  build:
+  Pipeline-Job:
+    # Configure Environment
+    name: 'Snyk Platform Scan'
     runs-on: ubuntu-latest
-
+    env: 
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+       
     steps:
-    - uses: actions/checkout@v2
+    # Checkout Code
+    - name: Checkout Code
+      uses: actions/checkout@v1
 
-    - name: Use Node.js for installing Snyk 
-      uses: actions/setup-node@v2
-      with:
-        node-version: 18.4
-
-    # Install & prepare Snyk
-    - run: npm install --location=global snyk
-    
-    #  This OPTIONAL step will configure the Snyk CLI to connect to the EU instance of Snyk
-    #- run: snyk config set use-base64-encoding=true
-    #- run: snyk config set endpoint='https://app.eu.snyk.io/api'
-      
-    - run: snyk auth ${{ secrets.SNYK_TOKEN }}
-    - name: install snyk-to-html
+    # Install and Authenticate to Snyk
+    - name: Install Snyk & Authenticate
       run: |
-        npm install snyk-to-html -g
-        mkdir downloads
-        cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
-
-    - name: Snyk Open Source Scanning
-      run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --json | snyk-to-html -o result.html
-      continue-on-error: true
-    - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v2
-      with:
-        name: oss-results
-        path: downloads
-
-    - name: Snyk Code Scanning
-      run: snyk code test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
-      continue-on-error: true
-    - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v2
-      with:
-        name: code-results
-        path: downloads
-
-
-    - name: Build the Docker Image
+         sudo npm install -g snyk
+         sudo npm install -g snyk-to-html
+         snyk auth ${SNYK_TOKEN}
+    # Run Snyk Code
+    - name: Run Snyk + Docker stuff
       run: |
-          docker login
-          docker build -t ror-image . 
-          docker tag ror-image cesarinag/ror-image:8.4.22
-
-    - name: Snyk Container Scanning
-      run: snyk container test --org=${{ secrets.SNYK_ORG }} --file=Dockerfile --json | snyk-to-html -o result.html cesarinag/ror-image:8.4.22
+         snyk code test --sarif  > results_code.sarif || true
+         snyk-to-html -i results_code.sarif -o results_code.html || true
+         snyk test --json | snyk-to-html -o results_sca.html || true
+         snyk iac test . --json | snyk-to-html -o results_iac.html || true
+         docker login
+         build -t ror-image .
+         docker tag ror-image cesarinag/ror-image:8.4.22
+         snyk container test cesarinag/ror-image:8.4.22 --json | snyk-to-html -o results_container.html || true
       continue-on-error: true
-    - name: Use the Upload Artifact GitHub Action
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        # Path to SARIF file relative to the root of the repository
+        sarif_file: results_code.sarif
+    - name: Archive Snyk Code Coverage Results
       uses: actions/upload-artifact@v2
       with:
-        name: container-results
-        path: downloads
-
-    - name: Snyk Infrastructure-as-Code Scanning
-      run: snyk iac test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
-      continue-on-error: true
-    - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v2
-      with:
-        name: iac-results
-        path: downloads
-        
+          name: Archive Snyk Code Scan Results
+          path: | 
+            results_code.sarif
+            results_code.html
+            results_iac.html
+            results_sca.html
+            results_container.html
