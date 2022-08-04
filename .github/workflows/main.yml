@@ -50,7 +50,7 @@ jobs:
     - name: Build the Docker Image
       run: |
           docker login
-          docker build -t rorImage . 
+          docker build -t ror-image . 
           docker tag rorImage cesarinag/ror-image:8.4.22
 
     - name: Snyk Container Scanning
