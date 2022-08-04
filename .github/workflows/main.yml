@@ -3,7 +3,6 @@ name: Prebuilt repo + Snyk Security Scanning (OS, Code, Docker, IaC)
 # Runs 4 Snyk Products (Code, Open Source, Container, IaC)
 # Snyk installation via npm
 # Node.js version: 18.4
-# Outputs the results to the pipeline and in SARIF-format to the security tab
 
 # Prerequisites:
 # - Set a SNYK_TOKEN and a SNYK_ORG in the pipelines secrets
@@ -34,25 +33,25 @@ jobs:
       run: |
         npm install snyk-to-html -g
         mkdir downloads
-        #cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
+        cp -v /home/runner/work/java-goof/java-goof/*.html /home/runner/work/java-goof/java-goof/downloads
 
     - name: Snyk Open Source Scanning
       run: snyk test --org=${{ secrets.SNYK_ORG }} --all-projects --json | snyk-to-html -o result.html
       continue-on-error: true
     - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v2
       with:
         name: oss-results
-        path: /downloads
+        path: downloads
 
     - name: Snyk Code Scanning
       run: snyk code test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
       continue-on-error: true
     - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v2
       with:
         name: code-results
-        path: /downloads
+        path: downloads
 
 
     - name: Build the Docker Image
@@ -65,17 +64,17 @@ jobs:
       run: snyk container test --org=${{ secrets.SNYK_ORG }} --file=Dockerfile --json | snyk-to-html -o result.html cesarinag/ror-image:8.4.22
       continue-on-error: true
     - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v2
       with:
         name: container-results
-        path: /downloads
+        path: downloads
 
     - name: Snyk Infrastructure-as-Code Scanning
       run: snyk iac test --org=${{ secrets.SNYK_ORG }} --json | snyk-to-html -o result.html
       continue-on-error: true
     - name: Use the Upload Artifact GitHub Action
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v2
       with:
         name: iac-results
-        path: /downloads
+        path: downloads
         
