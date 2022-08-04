@@ -28,7 +28,7 @@ jobs:
          snyk-to-html -i results_code.sarif -o results_code.html || true
          snyk test --json | snyk-to-html -o results_sca.html || true
          snyk iac test . --json | snyk-to-html -o results_iac.html || true
-         snyk container test cesarinag/juice-shop:latest --json | snyk-to-html -o results_container.html || true
+         snyk container test cesarinag/juice-shop:7.17.22 --json | snyk-to-html -o results_container.html || true
       continue-on-error: true
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v2
